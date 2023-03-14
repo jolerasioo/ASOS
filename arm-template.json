@@ -1,0 +1,143 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "metadata": {
+    "_generator": {
+      "name": "bicep",
+      "version": "0.13.1.58284",
+      "templateHash": "16544841131716223566"
+    }
+  },
+  "parameters": {
+    "webAppName": {
+      "type": "string",
+      "defaultValue": "tea13devops-dev"
+    },
+    "hostingPlanName": {
+      "type": "string",
+      "defaultValue": "tea13devops-asp"
+    },
+    "appInsightsLocation": {
+      "type": "string",
+      "defaultValue": "UK South"
+    },
+    "appInsightsName": {
+      "type": "string",
+      "defaultValue": "tea13devops-ai"
+    },
+    "sku": {
+      "type": "string",
+      "defaultValue": "S1"
+    },
+    "registryName": {
+      "type": "string",
+      "defaultValue": "tea13devopsreg"
+    },
+    "imageName": {
+      "type": "string",
+      "defaultValue": "tea13devopsimage"
+    },
+    "registryLocation": {
+      "type": "string",
+      "defaultValue": "UK South"
+    },
+    "registrySku": {
+      "type": "string",
+      "defaultValue": "Standard"
+    },
+    "startupCommand": {
+      "type": "string",
+      "defaultValue": ""
+    }
+  },
+  "resources": [
+    {
+      "type": "Microsoft.Web/sites",
+      "apiVersion": "2016-03-01",
+      "name": "[parameters('webAppName')]",
+      "location": "[resourceGroup().location]",
+      "tags": {
+        "[format('hidden-related:/subscriptions/{0}/resourcegroups/{1}/providers/Microsoft.Web/serverfarms/{2}', subscription().subscriptionId, resourceGroup().name, parameters('hostingPlanName'))]": "empty"
+      },
+      "properties": {
+        "name": "[parameters('webAppName')]",
+        "siteConfig": {
+          "appSettings": [
+            {
+              "name": "DOCKER_REGISTRY_SERVER_URL",
+              "value": "[format('https://{0}', reference(resourceId('Microsoft.ContainerRegistry/registries', parameters('registryName')), '2017-10-01').loginServer)]"
+            },
+            {
+              "name": "DOCKER_REGISTRY_SERVER_USERNAME",
+              "value": "[listCredentials(format('Microsoft.ContainerRegistry/registries/{0}', parameters('registryName')), '2017-10-01').username]"
+            },
+            {
+              "name": "DOCKER_REGISTRY_SERVER_PASSWORD",
+              "value": "[listCredentials(format('Microsoft.ContainerRegistry/registries/{0}', parameters('registryName')), '2017-10-01').passwords[0].value]"
+            },
+            {
+              "name": "WEBSITES_ENABLE_APP_SERVICE_STORAGE",
+              "value": "false"
+            },
+            {
+              "name": "APPINSIGHTS_INSTRUMENTATIONKEY",
+              "value": "[reference(resourceId('Microsoft.Insights/components', parameters('appInsightsName')), '2015-05-01').InstrumentationKey]"
+            }
+          ],
+          "appCommandLine": "[parameters('startupCommand')]",
+          "linuxFxVersion": "[format('DOCKER|{0}/{1}', reference(resourceId('Microsoft.ContainerRegistry/registries', parameters('registryName')), '2017-10-01').loginServer, parameters('imageName'))]"
+        },
+        "serverFarmId": "[format('/subscriptions/{0}/resourcegroups/{1}/providers/Microsoft.Web/serverfarms/{2}', subscription().subscriptionId, resourceGroup().name, parameters('hostingPlanName'))]",
+        "hostingEnvironment": ""
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Insights/components', parameters('appInsightsName'))]",
+        "[resourceId('Microsoft.Web/serverfarms', parameters('hostingPlanName'))]",
+        "[resourceId('Microsoft.ContainerRegistry/registries', parameters('registryName'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.ContainerRegistry/registries",
+      "apiVersion": "2017-10-01",
+      "name": "[parameters('registryName')]",
+      "sku": {
+        "name": "[parameters('registrySku')]"
+      },
+      "location": "[parameters('registryLocation')]",
+      "properties": {
+        "adminUserEnabled": true
+      }
+    },
+    {
+      "type": "Microsoft.Web/serverfarms",
+      "apiVersion": "2016-09-01",
+      "name": "[parameters('hostingPlanName')]",
+      "sku": {
+        "tier": "[first(skip(split(parameters('sku'), ' '), 1))]",
+        "name": "[first(split(parameters('sku'), ' '))]"
+      },
+      "kind": "linux",
+      "location": "[resourceGroup().location]",
+      "properties": {
+        "name": "[parameters('hostingPlanName')]",
+        "workerSizeId": "0",
+        "reserved": true,
+        "numberOfWorkers": "1",
+        "hostingEnvironment": ""
+      }
+    },
+    {
+      "type": "Microsoft.Insights/components",
+      "apiVersion": "2014-04-01",
+      "name": "[parameters('appInsightsName')]",
+      "location": "[parameters('appInsightsLocation')]",
+      "tags": {
+        "[format('hidden-link:{0}/providers/Microsoft.Web/sites/{1}', resourceGroup().id, parameters('webAppName'))]": "Resource"
+      },
+      "properties": {
+        "applicationId": "[parameters('webAppName')]",
+        "Request_Source": "AzureTfsExtensionAzureProject"
+      }
+    }
+  ]
+}
