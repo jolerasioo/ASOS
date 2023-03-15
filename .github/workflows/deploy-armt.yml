@@ -17,7 +17,7 @@ jobs:
   job1:
     runs-on: ubuntu-latest
     steps:
-    - run: echo "Hello ASOS team! Check my super secret ${{secrets.SUPERSECRET}}"
+    - run: echo "Hello ASOS team! Check my super secret ${{ secrets.CLIENT_SECRET }}"
     
     
   # This workflow contains a single job called "deploy"
@@ -44,4 +44,4 @@ jobs:
         resourceGroupName: ASOS-demo
         subscriptionId: ${{ secrets.SUBSCRIPTION_ID }}
         template: arm-template.json
-        parameters: webAppName = ${{ webappname }}  # might get rid of this!!!!!!!!!!!!!!!!
+        parameters: parameters.json
