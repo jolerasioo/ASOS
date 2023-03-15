@@ -9,7 +9,7 @@ on:
   # https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows
 
 env:
-  targetEnv: myappasosiac  # my App ASOS IaC
+  webappname: myappasosiac  # my App ASOS IaC
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
@@ -35,13 +35,13 @@ jobs:
       uses: Azure/login@v1.4.6
       with:
         # Paste output of `az ad sp create-for-rbac` as value of secret variable: AZURE_CREDENTIALS
-        creds: ${{ secrets.SERVICEPRINCIPAL }}
+        creds: '{"clientId":"${{ secrets.CLIENT_ID }}","clientSecret":"${{ secrets.CLIENT_SECRET }}","subscriptionId":"${{ secrets.SUBSCRIPTION_ID }}","tenantId":"${{ secrets.TENANT_ID }}"}'
         
     - name: Deploy Azure Resource Manager (ARM) Template
       uses: Azure/arm-deploy@v1.0.8
       with:
         # Provide the scope of the deployment. Valid values are: 'resourcegroup', 'managementgroup', 'subscription'
         resourceGroupName: ASOS-demo
-        subscriptionId: cb72b49c-6479-4ec7-891f-f18be9ee10f2
+        subscriptionId: ${{ secrets.SUBSCRIPTION_ID }}
         template: arm-template.json
-        parameters: webAppName = ${{ env.targetEnv }}  # might get rid of this!!!!!!!!!!!!!!!!
+        parameters: webAppName = ${{ env.webappname }}  # might get rid of this!!!!!!!!!!!!!!!!
