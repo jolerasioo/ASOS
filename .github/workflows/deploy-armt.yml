@@ -44,4 +44,4 @@ jobs:
         resourceGroupName: ASOS-demo
         subscriptionId: ${{ secrets.SUBSCRIPTION_ID }}
         template: arm-template.json
-        parameters: webAppName = ${{ env.webappname }}  # might get rid of this!!!!!!!!!!!!!!!!
+        parameters: webAppName = ${{ webappname }}  # might get rid of this!!!!!!!!!!!!!!!!
